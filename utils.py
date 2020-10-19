@@ -4,7 +4,26 @@ import numpy as np
 from sklearn import preprocessing
 
 
-def get_data(type='train', dropna=True, get_dummy=True, feature_split=False, values_only=False):
+def generate_labels():
+    le = {'Name': preprocessing.LabelEncoder(),
+          'City': preprocessing.LabelEncoder(),
+          'State': preprocessing.LabelEncoder(),
+          'Bank': preprocessing.LabelEncoder(),
+          'BankState': preprocessing.LabelEncoder()}
+
+    columns = ['Name', 'City', 'State', 'Bank', 'BankState']
+    train_df = get_data(type='train', dropna=False, get_dummy=False)
+    test_df = get_data(type='test', dropna=False, get_dummy=False)
+    for column in columns:
+        train_unique = train_df[column].unique()
+        test_unique = test_df[column].unique()
+        total = sorted(set(train_unique) | set(test_unique))
+        le[column].fit(total)
+        # df[column] = le[column].transform(df[column])
+    return le
+
+
+def get_data(le={}, type='train', dropna=True, get_dummy=True, feature_split=False, values_only=False, drop_columns=[]):
     if type == 'train':
         df_train = pd.read_csv("dataset/Xtrain.csv", dtype={'Zip': 'object', 'NAICS': 'object', 'NewExist': 'object',
                                                             'FranchiseCode': 'object', 'UrbanRural': 'object'}, parse_dates=['ApprovalDate', 'DisbursementDate'])
@@ -36,21 +55,10 @@ def get_data(type='train', dropna=True, get_dummy=True, feature_split=False, val
                               pd.Timestamp("1970-01-01")) // pd.Timedelta('1s')
         df['DisbursementDate'] = (
             df['DisbursementDate'] - pd.Timestamp("1970-01-01")) // pd.Timedelta('1s')
-        # TODO: add label encocder
         columns = ['Name', 'City', 'State', 'Bank', 'BankState']
-        le = {'Name': preprocessing.LabelEncoder(),
-              'City': preprocessing.LabelEncoder(),
-              'State': preprocessing.LabelEncoder(),
-              'Bank': preprocessing.LabelEncoder(),
-              'BankState': preprocessing.LabelEncoder()}
-        train_df = get_data(type='train', dropna=False, get_dummy=False)
-        test_df = get_data(type='train', dropna=False, get_dummy=False)
         for column in columns:
-            train_unique = train_df[column].unique()
-            test_unique = test_df[column].unique()
-            total = sorted(set(train_unique) | set(test_unique))
-            le[column].fit(total)
             df[column] = le[column].transform(df[column])
+    df = df.drop(columns=drop_columns)
 
     return df
 
@@ -120,7 +128,7 @@ def feature_transformation(df_in):
 
 
 if __name__ == '__main__':
-    get_data(values_only=True)
+    get_data(values_only=True, type='test')
     # print(dataset.train_val_df.describe())
     # print(dataset.test_df.describe())
     # print(dataset.all_df.describe())
