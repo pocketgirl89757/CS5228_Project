@@ -2,6 +2,8 @@ import pandas as pd
 import locale
 import numpy as np
 from sklearn import preprocessing
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
 
 
 def generate_labels():
@@ -22,8 +24,26 @@ def generate_labels():
         # df[column] = le[column].transform(df[column])
     return le
 
+def generate_scaler(le, transformer):
+    base_dropna = get_data(le=le,type='train', dropna=True, get_dummy=True, feature_split=False, values_only=True,drop_columns=[])
+    base_dropna_x = base_dropna.drop(columns='ChargeOff')
+    scale_columns = base_dropna_x.columns
 
-def get_data(le={}, type='train', dropna=True, get_dummy=True, feature_split=False, values_only=False, drop_columns=[]):
+    tf = Pipeline(steps=[
+            ('transformer', transformer)])
+
+    scaler = ColumnTransformer(
+            remainder='passthrough', #passthough features not listed
+            transformers=[
+                ('tf', tf , scale_columns)
+            ])
+
+    scaler.fit(base_dropna_x)
+    
+    return scaler
+                    
+
+def get_data(scaler=None, le={}, type='train', dropna=True, get_dummy=True, feature_split=False, values_only=False, drop_columns=[]):
     if type == 'train':
         df_train = pd.read_csv("dataset/Xtrain.csv", dtype={'Zip': 'object', 'NAICS': 'object', 'NewExist': 'object',
                                                             'FranchiseCode': 'object', 'UrbanRural': 'object'}, parse_dates=['ApprovalDate', 'DisbursementDate'])
@@ -59,7 +79,25 @@ def get_data(le={}, type='train', dropna=True, get_dummy=True, feature_split=Fal
         for column in columns:
             df[column] = le[column].transform(df[column])
     df = df.drop(columns=drop_columns)
+    
+    print("df before")
+    print(df.info())
+    
+    if scaler is not None:
+        if type == 'train':
+            x = df.drop(columns='ChargeOff').copy()
+            x_scaled = scaler.transform(x)
+            x_normalized = pd.DataFrame(x_scaled, columns=x.columns)
+            print("x_normalized")
+            print(x_normalized.info())
+            df = pd.concat([x_normalized.reset_index(drop=True), df['ChargeOff'].reset_index(drop=True)], axis=1)
+        else:
+            x_scaled = scaler.transform(df.copy())
+            df = pd.DataFrame(x_scaled, columns=df.columns)
 
+    print("df after")
+    print(df.info())
+            
     return df
 
 
