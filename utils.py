@@ -80,23 +80,15 @@ def get_data(scaler=None, le={}, type='train', dropna=True, get_dummy=True, feat
             df[column] = le[column].transform(df[column])
     df = df.drop(columns=drop_columns)
     
-    print("df before")
-    print(df.info())
-    
     if scaler is not None:
         if type == 'train':
             x = df.drop(columns='ChargeOff').copy()
             x_scaled = scaler.transform(x)
             x_normalized = pd.DataFrame(x_scaled, columns=x.columns)
-            print("x_normalized")
-            print(x_normalized.info())
             df = pd.concat([x_normalized.reset_index(drop=True), df['ChargeOff'].reset_index(drop=True)], axis=1)
         else:
             x_scaled = scaler.transform(df.copy())
             df = pd.DataFrame(x_scaled, columns=df.columns)
-
-    print("df after")
-    print(df.info())
             
     return df
 
