@@ -27,8 +27,8 @@ def generate_labels():
     return le
 
 
-def generate_scaler(le, transformer):
-    base_dropna = get_data(le=le,type='train', dropna=True, get_dummy=True, feature_split=False, values_only=True,drop_columns=[])
+def generate_scaler(le, transformer, feature_split=False):
+    base_dropna = get_data(le=le,type='train', dropna=True, get_dummy=True, feature_split=feature_split, values_only=True,drop_columns=[])
     base_dropna_x = base_dropna.drop(columns='ChargeOff')
     scale_columns = base_dropna_x.columns
 
