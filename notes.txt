@@ -19,3 +19,6 @@ Best Accuracy : 0.9300314430454641
 2.Best Parameters {'learning_rate': 0.5, 'loss': 'exponential', 'max_depth': 8, 'max_features': None, 'min_samples_split': 4, 'n_estimators': 310}
 # drop_columns = ['CreateJob','ApprovalFY','ApprovalDate','DisbursementGross','SBA_Appv']
 Best Accuracy : 0.930774259725356
+
+
+
