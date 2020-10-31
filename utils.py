@@ -5,7 +5,9 @@ from sklearn import preprocessing
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 
-
+'''
+Transform Text columns to numeric label encoding
+'''
 def generate_labels():
     le = {'Name': preprocessing.LabelEncoder(),
           'City': preprocessing.LabelEncoder(),
@@ -24,8 +26,9 @@ def generate_labels():
         # df[column] = le[column].transform(df[column])
     return le
 
-def generate_scaler(le, transformer):
-    base_dropna = get_data(le=le,type='train', dropna=True, get_dummy=True, feature_split=False, values_only=True,drop_columns=[])
+
+def generate_scaler(le, transformer, feature_split=False):
+    base_dropna = get_data(le=le,type='train', dropna=True, get_dummy=True, feature_split=feature_split, values_only=True,drop_columns=[])
     base_dropna_x = base_dropna.drop(columns='ChargeOff')
     scale_columns = base_dropna_x.columns
 
@@ -44,6 +47,8 @@ def generate_scaler(le, transformer):
                     
 
 def get_data(scaler=None, le={}, type='train', dropna=True, get_dummy=True, feature_split=False, values_only=False, drop_columns=[]):
+    
+    # Load data
     if type == 'train':
         df_train = pd.read_csv("dataset/Xtrain.csv", dtype={'Zip': 'object', 'NAICS': 'object', 'NewExist': 'object',
                                                             'FranchiseCode': 'object', 'UrbanRural': 'object'}, parse_dates=['ApprovalDate', 'DisbursementDate'])
@@ -53,7 +58,10 @@ def get_data(scaler=None, le={}, type='train', dropna=True, get_dummy=True, feat
         df = pd.read_csv("dataset/Xtest.csv", dtype={'Zip': 'object', 'NAICS': 'object', 'NewExist': 'object',
                                                      'FranchiseCode': 'object', 'UrbanRural': 'object'}, parse_dates=['ApprovalDate', 'DisbursementDate'])
 
+        
     df = data_preprocessing(df)
+    
+    # Handle NA values
     if dropna and type == 'train':
         if get_dummy:
             df = one_hot_encoding_common(df)
@@ -68,18 +76,28 @@ def get_data(scaler=None, le={}, type='train', dropna=True, get_dummy=True, feat
             df = one_hot_encoding_common(df)
             df = df.drop(columns=['NewExist_-1', 'LowDoc_-1'])
 
+    # Transform continuous value to categorical
     if (feature_split):
         df = feature_transformation(df)
+        
+    # Transform Date, Text columns to numerical values
     if values_only:
+        
+        # Date to Epoch
         df['ApprovalDate'] = (df['ApprovalDate'] -
                               pd.Timestamp("1970-01-01")) // pd.Timedelta('1s')
         df['DisbursementDate'] = (
             df['DisbursementDate'] - pd.Timestamp("1970-01-01")) // pd.Timedelta('1s')
+        
+        # Apply label encoding to text column
         columns = ['Name', 'City', 'State', 'Bank', 'BankState']
         for column in columns:
             df[column] = le[column].transform(df[column])
+            
+    # Drop columns according to passed parameters 
     df = df.drop(columns=drop_columns)
     
+    # Perform data normalization
     if scaler is not None:
         if type == 'train':
             x = df.drop(columns='ChargeOff').copy()
@@ -94,7 +112,7 @@ def get_data(scaler=None, le={}, type='train', dropna=True, get_dummy=True, feat
 
 
 def data_preprocessing(df):
-    # Drop column
+    # Drop BalanceGross because all values are zero
     df = df.drop(columns=['BalanceGross'])
 
     # Process Date
@@ -159,6 +177,3 @@ def feature_transformation(df_in):
 
 if __name__ == '__main__':
     get_data(values_only=True, type='test')
-    # print(dataset.train_val_df.describe())
-    # print(dataset.test_df.describe())
-    # print(dataset.all_df.describe())
