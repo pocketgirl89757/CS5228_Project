@@ -80,7 +80,7 @@ def get_data(scaler=None, le={}, type='train', dropna=True, get_dummy=True, feat
     if (feature_split):
         df = feature_transformation(df)
         
-    # Transform Date, Text columns to numerical values
+    # Feature label encoding: Transform Date, Text columns to numerical values
     if values_only:
         
         # Date to Epoch
