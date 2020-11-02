@@ -76,7 +76,7 @@ def get_data(scaler=None, le={}, type='train', dropna=True, get_dummy=True, feat
             df = one_hot_encoding_common(df)
             df = df.drop(columns=['NewExist_-1', 'LowDoc_-1'])
 
-    # Transform continuous value to categorical
+    # Feature transformation: Convert continuous features into discrete features
     if (feature_split):
         df = feature_transformation(df)
         
