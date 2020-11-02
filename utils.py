@@ -80,7 +80,7 @@ def get_data(scaler=None, le={}, type='train', dropna=True, get_dummy=True, feat
     if (feature_split):
         df = feature_transformation(df)
         
-    # Feature label encoding: Transform Date, Text columns to numerical values
+    # Transform Date, Text columns to numerical values
     if values_only:
         
         # Date to Epoch
@@ -89,7 +89,7 @@ def get_data(scaler=None, le={}, type='train', dropna=True, get_dummy=True, feat
         df['DisbursementDate'] = (
             df['DisbursementDate'] - pd.Timestamp("1970-01-01")) // pd.Timedelta('1s')
         
-        # Apply label encoding to text column
+        # Feature label encoding: Apply label encoding to text column
         columns = ['Name', 'City', 'State', 'Bank', 'BankState']
         for column in columns:
             df[column] = le[column].transform(df[column])
